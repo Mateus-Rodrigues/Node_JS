@@ -78,6 +78,12 @@ module.exports = {
                 dados: atualiaDados[0].affectedRows
                 // mensSql: atualizaDados
             });
+        }catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                menssagem: 'Erro na requisição. ',
+                dados: error.message
+            });
         }
     },
     async apagarUsuarios(request, response) {
@@ -131,7 +137,32 @@ module.exports = {
 
             const { usu_email, usu_senha } = request.body;
 
-            const sql = `SELECT usu_nome, usu_email, usu_dt_nasc, usu_senha, usu_tipo, usu_ativo, usu_id `
+            const sql = `SELECT usu_id, usu_nome, usu_tipo, FROM usuarios
+               WHERE usu_email = ? AND usu_senha = ? AND usu_ativo = 1; `;
+            const values = [usu_email, usu_senha];
+
+            const usuarios = await db.query(sql, values);
+            const nItens = usuarios[0].length;
+
+            if (nItens < 1) {
+                return response.status(403).json({
+                    sucesso: false,
+                    mensagem: 'Login e/ou senha inválido.',
+                    dados: null,
+                });
+            }
+
+            return response.status(200).json({
+                sucesso: true,
+                mensagem: 'Login efetuado com sucesso',
+                dados: usuarios[0]
+            });
+        } catch (error) {
+            return response.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro na requisição. ',
+                dados: error.message
+            });
         }
-    }
+    },
 }
